@@ -6,4 +6,39 @@
     <header>
         <h1>Student Registration!</h1>
     </header>
+    <form>
+        <div>
+            <label for="firstName">First Name: </label>
+            <input type="text" name="firstName" id="firstName" required>
+        </div>
+        <div>
+            <label for="lastName">Last Name: </label>
+            <input type="text" name="lastName" id="lastName" required>
+        </div>
+        <div>
+            <label for="org">Organization: </label>
+            <input type="text" name="org" id="org" required>
+        </div>
+        <div>
+            <label for="grade">Grade Level: </label>
+            <select name="grade" required>
+                <option value="yearOne">1st Year</option>
+                <option value="yearTwo">2nd Year</option>
+                <option value="yearThree">3rd Year</option>
+                <option value="yearFour">4th Year</option>
+                <option value="yearPlus">5+ Year</option>
+            </select>
+        </div>
+        <div>
+            <label for="email">School Email: </label>
+            <input type="email" placeholder="abc123@psu.edu" required>
+        </div>
+        <div>
+            <label for="phone">Phone Number</label>
+            <input type="tel" placeholder="(###) ###-####">
+        </div>
+        <div>
+            <button type="submit">Submit</button>
+        </div>
+    </form>
 </body>

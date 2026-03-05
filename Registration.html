@@ -1,6 +1,8 @@
-<link rel="stylesheet" href="Regstyle.css">
+<html lang="en">
 <head>
     <title>Student Registration</title>
+    <link rel="stylesheet" href="Regstyle.css">
+    <script src="Registration.js"></script>
 </head>
 <body>
     <header>
@@ -15,7 +17,7 @@
         </ul>
     </nav>
 
-    <form>
+    <form id="registrationForm">
         <div>
             <label for="firstName">First Name: </label>
             <input type="text" name="firstName" id="firstName" required>
@@ -30,7 +32,7 @@
         </div>
         <div>
             <label for="grade">Grade Level: </label>
-            <select name="grade" required>
+            <select name="grade" id="grade" required>
                 <option value="yearOne">1st Year</option>
                 <option value="yearTwo">2nd Year</option>
                 <option value="yearThree">3rd Year</option>
@@ -40,14 +42,15 @@
         </div>
         <div>
             <label for="email">School Email: </label>
-            <input type="email" placeholder="abc123@psu.edu" required>
+            <input type="email" id="email" placeholder="abc123@psu.edu" required>
         </div>
         <div>
             <label for="phone">Phone Number</label>
-            <input type="tel" placeholder="(###) ###-####">
+            <input type="tel" id="phone" placeholder="(###) ###-####">
         </div>
         <div>
             <button type="submit">Submit</button>
         </div>
     </form>
 </body>
+</html>

@@ -5,4 +5,11 @@ header {
 }
 body {
     font-family: Arial, Helvetica, sans-serif;
+    text-align: center;
+}
+button {
+    color:whitesmoke;
+    font-size: large;
+    background-color: cornflowerblue;
+    padding: 15px 30px;
 }

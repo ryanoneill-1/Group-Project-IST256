@@ -6,3 +6,15 @@ header {
 body {
     font-family: Arial, Helvetica, sans-serif;
 }
+label{
+    margin: none;
+}
+input, select{
+    margin: 3px;
+    padding: 5px 10px;
+}
+button{
+    border: none;
+    display: inline-flex;
+    padding: 10px 20px;
+}

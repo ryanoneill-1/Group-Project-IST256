@@ -13,3 +13,25 @@ button {
     background-color: cornflowerblue;
     padding: 15px 30px;
 }
+main {
+    margin: 20px;
+    text-align: center;   
+}
+.tabs {
+    border-bottom: 2px solid lightgray;
+    padding: 12px 0px;
+    background-color: rgb(125, 125, 232);
+}
+.tabs ul{
+    list-style: none;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+.tabs a {
+    display: inline-block;
+    padding: auto;
+    text-decoration: none;
+    color: white;
+
+}

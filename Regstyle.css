@@ -1,24 +1,56 @@
+/* Used Zybooks Sandbox, then copied it over */
+.topnav {
+   max-width: 900px;
+      margin: 0 auto 30px auto;
+      background: white;
+      border-radius: 18px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+      text-align: justify;
+}
 
-.topnav{
-    text-align: center;
+.topnav ul {
+   list-style: none;
+   display: flex;
+   justify-content: center;
+   gap: 15px;
+   padding: 0;
 }
+
 header {
-    text-align: center;
-    background-color: lightblue;
-    padding: 20px;
+   text-align: center;
+   background: white;
+   padding: 20px;
 }
+
 body {
-    font-family: Arial, Helvetica, sans-serif;
+   font-family: Arial, Helvetica, sans-serif;
+      min-height: 100vh;
+      max-width: 900px;
+      background: linear-gradient(135deg, #0b1f4d, #123b8f, #5fa8ff);
+      color: #0f172a;
+      padding: 28px 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
 }
-label{
-    margin: none;
+
+label {
+   margin-bottom: 7px;
+      font-weight: 700;
+      color: white;
+      font-size: 0.98rem;
 }
-input, select{
-    margin: 3px;
-    padding: 5px 10px;
+
+input,
+select {
+   margin: 3px;
+   padding: 5px 10px;
 }
-button{
-    border: none;
-    display: inline-flex;
-    padding: 10px 20px;
+
+button {
+   border: none;
+      padding: 14px 22px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #123b8f, #2563eb);
+      color: white;
+      font-size: 1rem;
+      font-weight: bold;
 }

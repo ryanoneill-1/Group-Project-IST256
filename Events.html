@@ -1,9 +1,124 @@
-<link rel="stylesheet" href="Eventstyle.css">
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <title>Club Events</title>
+    <link rel="stylesheet" href="Eventstyle.css">
+    <script src="Events.js"></script>
 </head>
 <body>
+
     <header>
         <h1>Club Events</h1>
+        <p>Manage and browse all upcoming club events</p>
     </header>
+
+    <nav class="topnav">
+        <ul>
+            <li><a href="Homepage.html">Homepage</a></li>
+            <li><a href="Registration.html">Student Registration</a></li>
+            <li><a class="active" href="Events.html">Club Events</a></li>
+        </ul>
+    </nav>
+
+    <main>
+
+        <div class="card form-card">
+            <h2 id="formTitle">Add New Event</h2>
+
+            <div class="form-grid">
+                
+                <div class="form-group full-width">
+                    <label for="eventId">Event ID</label>
+                    <input type="text" id="eventId" placeholder="Auto-generated" readonly>
+                </div>
+
+                <div class="form-group">
+                    <label for="eventTitle">Event Title <span class="req">*</span></label>
+                    <input type="text" id="eventTitle" placeholder="e.g. Spring Kickoff Night">
+                </div>
+
+                <div class="form-group">
+                    <label for="eventCategory">Category <span class="req">*</span></label>
+                    <select id="eventCategory">
+                        <option value="">-- Select Category --</option>
+                        <option value="Social Event">Social Event</option>
+                        <option value="Workshop">Workshop</option>
+                        <option value="Meeting">Meeting</option>
+                        <option value="Fundraiser">Fundraiser</option>
+                        <option value="Competition">Competition</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="eventDuration">Event Length <span class="req">*</span></label>
+                    <input type="text" id="eventDuration" placeholder="e.g. 2 hours">
+                </div>
+
+                <div class="form-group">
+                    <label for="eventFee">Registration Fee <span class="req">*</span></label>
+                    <select id="eventFee">
+                        <option value="">-- Select Fee --</option>
+                        <option value="Free">Free</option>
+                        <option value="Members Only">Members Only</option>
+                        <option value="Paid">Paid</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="eventLocation">Location</label>
+                    <input type="text" id="eventLocation" placeholder="e.g. HUB Room 233">
+                </div>
+
+                <div class="form-group">
+                    <label for="eventHost">Speaker / Host</label>
+                    <input type="text" id="eventHost" placeholder="e.g. Dr. Jane Smith">
+                </div>
+            </div>
+
+            <div id="formError" class="error-msg" style="display:none;"></div>
+            <div id="formSuccess" class="success-msg" style="display:none;"></div>
+
+            <div class="btn-row">
+                <button id="submitBtn" onclick="saveEvent()">Add Event</button>
+                <button id="cancelBtn" onclick="cancelEdit()" style="display:none;">Cancel</button>
+            </div>
+        </div>
+
+        <div class="card table-card">
+            <div class="table-header">
+                <h2>Event Catalog</h2>
+                <input type="text" id="searchInput" placeholder="🔍 Search by title or category...">
+            </div>
+
+            <div class="table-wrap">
+                <table id="eventsTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Title</th>
+                            <th>Category</th>
+                            <th>Length</th>
+                            <th>Fee</th>
+                            <th>Location</th>
+                            <th>Host</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="eventsTableBody">
+                        <tr><td colspan="8" class="empty-msg">No events added yet.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <footer>
+        <p><strong>© 2026 Student Club Portal. IST256 Group Project.</strong></p>
+    </footer>
+
+    <script src="Eventsscript.js"></script>
+
 </body>
+</html>

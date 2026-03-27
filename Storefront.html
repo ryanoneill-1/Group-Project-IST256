@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Student Club Portal - Storefront</title>
+    <link rel="stylesheet" href="StorefrontStyle.css">
+    <script src="StorefrontScript.js"></script>
+</head>
+<body>
+
+    <nav class="topnav">
+        <ul>
+            <li><a href="Homepage.html">Homepage</a></li>
+            <li><a href="Registration.html">Student Registration</a></li>
+            <li><a href="Events.html">Club Events</a></li>
+            <li><a href="ShoppingCart.html">Shopping Cart</a></li>
+            <li><a class="active" href="Storefront.html">Storefront</a></li>
+        </ul>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-content">
+            <p class="hero-eyebrow">Student Club Portal</p>
+            <h1>Your Campus.<br>Your Community.<br>Your Events.</h1>
+            <p class="hero-sub">Discover upcoming events, register as a member, and manage your club activity — all in one place.</p>
+            <div class="hero-btns">
+                <a href="Registration.html" class="btn-primary">Register Now</a>
+                <a href="Events.html" class="btn-secondary">Browse Events</a>
+                <a href="ShoppingCart.html" class="btn-ghost">View Cart</a>
+            </div>
+        </div>
+        <div class="hero-graphic">
+            <div class="orbit-ring ring-1"></div>
+            <div class="orbit-ring ring-2"></div>
+            <div class="orbit-ring ring-3"></div>
+            <div class="hero-circle">
+                <span>SCP</span>
+            </div>
+        </div>
+    </section>
+
+    <main>
+
+        <section class="section-announcements">
+            <div class="section-label">Latest News</div>
+            <h2 class="section-title">Announcements</h2>
+            <div class="announcements-grid" id="announcementsGrid">
+                <div class="announcement-card urgent">
+                    <span class="ann-tag">Urgent</span>
+                    <h3>End-of-Semester Event Registration Open</h3>
+                    <p>Registration for all Spring semester closing events is now live. Spots are limited — secure yours today before they fill up.</p>
+                    <span class="ann-date">March 25, 2026</span>
+                </div>
+                <div class="announcement-card">
+                    <span class="ann-tag">News</span>
+                    <h3>New Workshop Series Announced</h3>
+                    <p>The club is launching a 4-part professional development workshop series starting in April. All members welcome.</p>
+                    <span class="ann-date">March 20, 2026</span>
+                </div>
+                <div class="announcement-card">
+                    <span class="ann-tag">Reminder</span>
+                    <h3>Member Dues Due April 1st</h3>
+                    <p>Annual member dues are due by April 1st. Visit the registration page to confirm your membership status.</p>
+                    <span class="ann-date">March 18, 2026</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="section-featured">
+            <div class="section-label">Don't Miss Out</div>
+            <h2 class="section-title">Featured Events</h2>
+            <div id="featuredGrid" class="featured-grid">
+                <p class="empty-msg" id="featuredEmpty">No events available yet. <a href="Events.html">Add some events</a> to see them featured here.</p>
+            </div>
+        </section>
+
+        <section class="section-cta">
+            <div class="cta-box">
+                <h2>Ready to get involved?</h2>
+                <p>Join hundreds of students already registered. Browse events, sign up, and make the most of your campus experience.</p>
+                <div class="cta-btns">
+                    <a href="Registration.html" class="btn-primary">Create Your Account</a>
+                    <a href="Shoppingcart.html" class="btn-secondary">Go to Cart</a>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer>
+        <p><strong>© 2026 Student Club Portal. IST256 Group Project.</strong></p>
+    </footer>
+
+    <script src="StorefrontScript.js"></script>
+
+</body>
+</html>

@@ -100,9 +100,7 @@ function renderCart() {
 
 function addToCart(id) {
     const selectedEvent = events.find(item => item.id === id);
-
     if (!selectedEvent) return;
-
     const alreadyInCart = cart.some(item => item.id === id);
     if (alreadyInCart) {
         alert("This event is already in your cart.");
@@ -126,31 +124,25 @@ $(document).ready(function () {
 
     $("#search").on("keyup", function () {
         let value = $(this).val().toLowerCase();
-
         let filtered = events.filter(item =>
             item.title.toLowerCase().includes(value) ||
             item.category.toLowerCase().includes(value) ||
             (item.location && item.location.toLowerCase().includes(value)) ||
             (item.host && item.host.toLowerCase().includes(value))
         );
-
         renderEvents(filtered);
     });
-
     $("#checkoutBtn").click(function () {
         if (cart.length === 0) {
             alert("Your cart is empty.");
             return;
         }
-
         alert("Registration submitted successfully!");
-
         cart = [];
         localStorage.setItem("cart", JSON.stringify(cart));
         renderCart();
     });
 });
 </script>
-
 </body>
 </html>

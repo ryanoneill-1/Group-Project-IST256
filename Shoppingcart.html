@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
+<link rel="stylesheet" href="Shoppingcart.css">
+
 <head>
+    <title>Student Club Portal</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Club Portal - Registration Cart</title>
@@ -9,6 +12,15 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 </head>
 <body class="bg-light">
+        <nav class="topnav">
+        <ul>
+            <li><a href="Homepage.html">Homepage</a></li>
+            <li><a href="Registration.html">Student Registration</a></li>
+            <li><a href="Events.html">Club Events</a></li>
+            <li><a class="active" href="ShoppingCart.html">Shopping Cart</a></li>
+            <li><a href="Storefront.html">Storefront</a></li>
+        </ul>
+    </nav>
 
 <div class="container py-4">
     <h1 class="text-center mb-2">Student Club Portal</h1>
@@ -143,6 +155,11 @@ $(document).ready(function () {
         renderCart();
     });
 });
+
+
 </script>
 </body>
+    <footer>
+        <p><strong>© 2026 Student Club Portal. IST256 Group Project.</strong></p>
+    </footer>
 </html>

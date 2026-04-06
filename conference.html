@@ -1,734 +1,399 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Club Events</title>
-  <link rel="stylesheet" href="conference.css">
-  <!-- React + ReactDOM -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Conference Registration</title>
   <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-
-  <!-- Babel (lets browser understand JSX) -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <link rel="stylesheet" href="conference.css">
 </head>
 <body>
-   <nav class="topnav">
-    <ul>
-        <li><a href="Homepage.html">Homepage</a></li>
-        <li><a href="Registration.html">Student Registration</a></li>
-        <li><a href="Events.html">Club Events</a></li>
-        <li><a href="ShoppingCart.html">Shopping Cart</a></li>
-        <li><a href="Storefront.html">Storefront</a></li>
-        <li><a class="active"href="conference-registration.html">Session Registration</a></li>
-    </ul>
-</nav>
   <div id="root"></div>
 
   <script type="text/babel">
     const { useState, useEffect, useRef } = React;
 
-    const EMPTY_FORM = {
-      title: "",
-      category: "",
-      duration: "",
-      fee: "",
-      location: "",
-      host: "",
-    };
-
-    const EMPTY_REG = {
-      firstName: "",
-      lastName: "",
-      email: "",
-      phone: "",
-      participationType: "",
-    };
-
-    const PARTICIPATION_TYPES = ["In-Person", "Virtual", "VIP"];
-
-    const CATEGORIES = [
-      "Social Event",
-      "Workshop",
-      "Meeting",
-      "Fundraiser",
-      "Competition",
-      "Other",
+    const SEED_EVENTS = [
+      { id: 1, title: "Intro to Web Dev", category: "Workshop", duration: "2 hrs", location: "Room 101", host: "CS Club" },
+      { id: 2, title: "Resume Review Night", category: "Career", duration: "1.5 hrs", location: "Career Center", host: "Business Club" },
+      { id: 3, title: "Hackathon Kickoff", category: "Competition", duration: "48 hrs", location: "Student Union", host: "Dev Society" },
+      { id: 4, title: "Photography Walk", category: "Arts", duration: "3 hrs", location: "Campus Grounds", host: "Photo Club" },
+      { id: 5, title: "Debate Meetup", category: "Social", duration: "1 hr", location: "Library Hall", host: "Debate Team" },
     ];
 
-    const FEES = ["Free", "Members Only", "Paid"];
+    const CATEGORY_COLOR = {
+      Workshop: "#3b82f6",
+      Career: "#10b981",
+      Competition: "#f59e0b",
+      Arts: "#ec4899",
+      Social: "#8b5cf6",
+      default: "#6b7280",
+    };
 
-    function ClubEvents() {
-      const [events, setEvents] = useState(() => {
-        try {
-          return JSON.parse(localStorage.getItem("events")) || [];
-        } catch {
-          return [];
-        }
-      });
-      const [form, setForm] = useState(EMPTY_FORM);
-      const [editingId, setEditingId] = useState(null);
-      const [error, setError] = useState("");
-      const [success, setSuccess] = useState("");
-      const [search, setSearch] = useState("");
-      const [reg, setReg] = useState(EMPTY_REG);
-      const [regError, setRegError] = useState("");
-      const [regSaved, setRegSaved] = useState(false);
-      const successTimer = useRef(null);
+    function getCategoryColor(category) {
+      return CATEGORY_COLOR[category] || CATEGORY_COLOR.default;
+    }
+
+    function readLocalStorage(key, fallback) {
+      try {
+        const item = localStorage.getItem(key);
+        return item ? JSON.parse(item) : fallback;
+      } catch {
+        return fallback;
+      }
+    }
+
+    const NAV_LINKS = [
+      ["Homepage", "Homepage.html"],
+      ["Student Registration", "Registration.html"],
+      ["Club Events", "Events.html"],
+      ["Shopping Cart", "ShoppingCart.html"],
+      ["Storefront", "Storefront.html"],
+      ["Session Registration", "conference.html"],
+    ];
+
+    function NavBar() {
+      return (
+        <nav>
+          {NAV_LINKS.map(([label, href]) => (
+            <a key={label} href={href} className={label === "Shopping Cart" ? "active" : ""}>
+              {label}
+            </a>
+          ))}
+        </nav>
+      );
+    }
+
+    function Toast({ message, color }) {
+      if (!message) return null;
+      return (
+        <div className="toast" style={{ background: color }}>
+          {message}
+        </div>
+      );
+    }
+
+    function EventCard({ event, onAdd, inCart }) {
+      const color = getCategoryColor(event.category);
+      return (
+        <div className="event-card" style={{ borderLeftColor: color }}>
+          <div className="event-card-body">
+            <div>
+              <h3>{event.title}</h3>
+              <span className="badge" style={{ background: color }}>{event.category}</span>
+              <div className="event-meta">
+                <span>Duration: {event.duration}</span>
+                {event.location && <span>Location: {event.location}</span>}
+                {event.host && <span>Host: {event.host}</span>}
+              </div>
+            </div>
+            <button
+              className="btn-add"
+              onClick={() => onAdd(event.id)}
+              disabled={inCart}
+            >
+              {inCart ? "Added" : "+ Add"}
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    function CartItem({ item, index, onRemove }) {
+      return (
+        <div className="cart-item">
+          <div>
+            <p>{item.title}</p>
+            <span className="badge" style={{ background: getCategoryColor(item.category), fontSize: "0.7rem" }}>
+              {item.category}
+            </span>
+          </div>
+          <button className="btn-remove" onClick={() => onRemove(index)}>X</button>
+        </div>
+      );
+    }
+
+    const PARTICIPATION_TYPES = [
+      { value: "in-person", label: "In-Person", description: "Attend at the physical venue" },
+      { value: "virtual",   label: "Virtual",   description: "Join online via livestream" },
+      { value: "vip",       label: "VIP",        description: "Priority seating and exclusive access" },
+    ];
+
+    function ParticipationBox({ selected, error, onChange }) {
+      return (
+        <div className="participation-box">
+          <h2>Participation Type</h2>
+          <p className="info-subtitle">Select how you will be attending. Only one option can be chosen.</p>
+          <div className="participation-options">
+            {PARTICIPATION_TYPES.map(({ value, label, description }) => {
+              const isSelected = selected === value;
+              return (
+                <div
+                  key={value}
+                  className={"participation-option" + (isSelected ? " selected" : "") + (error && !selected ? " invalid-option" : "")}
+                  onClick={() => onChange(value)}
+                >
+                  <input
+                    className="participation-radio"
+                    type="radio"
+                    name="participationType"
+                    value={value}
+                    checked={isSelected}
+                    onChange={() => onChange(value)}
+                  />
+                  <div className="participation-label">
+                    <strong>{label}</strong>
+                    <span>{description}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          {error && <p className="participation-error">{error}</p>}
+        </div>
+      );
+    }
+
+    function PersonalInfoBox({ info, errors, onChange }) {
+      const fields = [
+        { key: "firstName", label: "First Name", type: "text", placeholder: "Jane" },
+        { key: "lastName",  label: "Last Name",  type: "text", placeholder: "Smith" },
+        { key: "email",     label: "Email",       type: "text", placeholder: "jane@example.com" },
+        { key: "phone",     label: "Phone Number", type: "text", placeholder: "555-123-4567" },
+      ];
+      return (
+        <div className="info-box">
+          <h2>Personal Information</h2>
+          <p className="info-subtitle">All fields are required to complete registration.</p>
+          <div className="info-grid">
+            {fields.map(({ key, label, type, placeholder }) => (
+              <div className="field-group" key={key}>
+                <label>{label}<span>*</span></label>
+                <input
+                  type={type}
+                  placeholder={placeholder}
+                  value={info[key]}
+                  onChange={(e) => onChange(key, e.target.value)}
+                  className={errors[key] ? "invalid" : ""}
+                />
+                <span className="field-error">{errors[key] || ""}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    const CONFERENCES = [
+      { id: "c1", title: "AI & the Future of Work", speaker: "Dr. Linda Park", time: "Sat 9:00 AM", track: "Technology", color: "#3b82f6" },
+      { id: "c2", title: "Sustainable Campus Initiatives", speaker: "Prof. Marcus Green", time: "Sat 11:00 AM", track: "Environment", color: "#10b981" },
+      { id: "c3", title: "Entrepreneurship 101", speaker: "Sarah Okonkwo, MBA", time: "Sat 1:00 PM", track: "Business", color: "#f59e0b" },
+      { id: "c4", title: "Mental Health in College", speaker: "Dr. James Liu", time: "Sat 3:00 PM", track: "Wellness", color: "#ec4899" },
+      { id: "c5", title: "Breaking into Tech Internships", speaker: "Alumni Panel", time: "Sun 10:00 AM", track: "Career", color: "#8b5cf6" },
+      { id: "c6", title: "Data Science for Everyone", speaker: "Prof. Aisha Ndiaye", time: "Sun 1:00 PM", track: "Technology", color: "#3b82f6" },
+    ];
+
+    function SessionsBox({ selected, error, onToggle }) {
+      return (
+        <div className="sessions-box">
+          <h2>Select Sessions</h2>
+          <p className="info-subtitle">Choose one or more conference sessions to attend. At least one is required.</p>
+          <div className="sessions-grid">
+            {CONFERENCES.map((conf) => {
+              const isSelected = selected.includes(conf.id);
+              const showInvalid = error && selected.length === 0;
+              return (
+                <div
+                  key={conf.id}
+                  className={"session-card" + (isSelected ? " selected" : "") + (showInvalid ? " invalid-session" : "")}
+                  onClick={() => onToggle(conf.id)}
+                >
+                  <input
+                    className="session-checkbox"
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={() => onToggle(conf.id)}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  <div className="session-info">
+                    <strong>{conf.title}</strong>
+                    <span>{conf.speaker}</span>
+                    <span>{conf.time}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          {error && <p className="sessions-error">{error}</p>}
+        </div>
+      );
+    }
+
+    function ShoppingCart() {
+      const [events] = useState(() => readLocalStorage("events", SEED_EVENTS));
+      const [cart, setCart] = useState(() => readLocalStorage("cart", []));
+      const [query, setQuery] = useState("");
+      const [toast, setToast] = useState({ message: "", color: "#10b981" });
+      const toastTimer = useRef(null);
+      const [info, setInfo] = useState({ firstName: "", lastName: "", email: "", phone: "" });
+      const [participationType, setParticipationType] = useState("");
+      const [selectedSessions, setSelectedSessions] = useState([]);
+      const [errors, setErrors] = useState({});
 
       useEffect(() => {
-        localStorage.setItem("events", JSON.stringify(events));
-      }, [events]);
+        localStorage.setItem("cart", JSON.stringify(cart));
+      }, [cart]);
 
-      function showSuccess(msg) {
-        setSuccess(msg);
-        setError("");
-        clearTimeout(successTimer.current);
-        successTimer.current = setTimeout(() => setSuccess(""), 3000);
+      function showToast(message, color) {
+        clearTimeout(toastTimer.current);
+        setToast({ message, color: color || "#10b981" });
+        toastTimer.current = setTimeout(() => setToast({ message: "", color: "#10b981" }), 2500);
       }
 
-      // --- Registration validation ---
-      function validateReg() {
-        if (!reg.firstName.trim()) {
-          setRegError("First name is required.");
-          return false;
+      function addToCart(id) {
+        if (cart.some((item) => item.id === id)) {
+          showToast("Already in cart!", "#f59e0b");
+          return;
         }
-        if (!reg.lastName.trim()) {
-          setRegError("Last name is required.");
-          return false;
+        const event = events.find((e) => e.id === id);
+        if (!event) return;
+        setCart((prev) => [...prev, event]);
+        showToast(event.title + " added!", "#10b981");
+      }
+
+      function removeFromCart(index) {
+        setCart((prev) => prev.filter((_, i) => i !== index));
+      }
+
+      function toggleSession(id) {
+        setSelectedSessions((prev) =>
+          prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
+        );
+        setErrors((prev) => ({ ...prev, sessions: "" }));
+      }
+
+      function handleInfoChange(key, value) {
+        setInfo((prev) => ({ ...prev, [key]: value }));
+        if (errors[key]) {
+          setErrors((prev) => ({ ...prev, [key]: "" }));
         }
-        if (!reg.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(reg.email)) {
-          setRegError("A valid email address is required.");
-          return false;
+      }
+
+      function validateInfo() {
+        const newErrors = {};
+        if (!info.firstName.trim()) newErrors.firstName = "First name is required.";
+        if (!info.lastName.trim())  newErrors.lastName  = "Last name is required.";
+        if (!info.email.trim()) {
+          newErrors.email = "Email is required.";
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(info.email)) {
+          newErrors.email = "Enter a valid email address.";
         }
-        if (!reg.phone.trim()) {
-          setRegError("Phone number is required.");
-          return false;
+        if (!info.phone.trim()) {
+          newErrors.phone = "Phone number is required.";
+        } else if (!/^[\d\s\-\(\)\+]{7,15}$/.test(info.phone)) {
+          newErrors.phone = "Enter a valid phone number.";
         }
-        if (!reg.participationType) {
-          setRegError("Please select a Participation Type.");
-          return false;
+        if (!participationType) newErrors.participationType = "Please select a participation type.";
+        if (selectedSessions.length === 0) newErrors.sessions = "Please select at least one session.";
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+      }
+
+      function checkout() {
+        if (!validateInfo()) {
+          showToast("Please fill in all required fields.", "#ef4444");
+          return;
         }
-        setRegError("");
-        return true;
+        showToast("Registration submitted!", "#3b82f6");
+        setCart([]);
+        setInfo({ firstName: "", lastName: "", email: "", phone: "" });
+        setParticipationType("");
+        setSelectedSessions([]);
+        setErrors({});
       }
 
-      function saveReg() {
-        if (!validateReg()) return;
-        setRegSaved(true);
-        setRegError("");
-      }
+      const cartIds = new Set(cart.map((item) => item.id));
 
-      function editReg() {
-        setRegSaved(false);
-      }
-
-      function handleRegChange(field, value) {
-        setReg((prev) => ({ ...prev, [field]: value }));
-      }
-
-      // --- Event form validation ---
-      function validate() {
-        if (!form.title.trim()) {
-          setError("Event Title is required.");
-          return false;
-        }
-        if (!form.category) {
-          setError("Please select a Category.");
-          return false;
-        }
-        if (!form.duration.trim()) {
-          setError("Event Length is required.");
-          return false;
-        }
-        if (!form.fee) {
-          setError("Please select a Registration Fee.");
-          return false;
-        }
-        setError("");
-        return true;
-      }
-
-      function saveEvent() {
-        if (!validate()) return;
-
-        if (editingId !== null) {
-          setEvents((prev) =>
-            prev.map((e) => (e.id === editingId ? { id: editingId, ...form } : e))
-          );
-          setEditingId(null);
-          showSuccess("Event updated successfully!");
-        } else {
-          setEvents((prev) => [...prev, { id: Date.now(), ...form }]);
-          showSuccess("Event added successfully!");
-        }
-        setForm(EMPTY_FORM);
-      }
-
-      function editEvent(id) {
-        const ev = events.find((e) => e.id === id);
-        if (!ev) return;
-        const { id: _, ...rest } = ev;
-        setForm(rest);
-        setEditingId(id);
-        setError("");
-        setSuccess("");
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }
-
-      function deleteEvent(id) {
-        if (!confirm("Are you sure you want to delete this event?")) return;
-        setEvents((prev) => prev.filter((e) => e.id !== id));
-      }
-
-      function cancelEdit() {
-        setEditingId(null);
-        setForm(EMPTY_FORM);
-        setError("");
-        setSuccess("");
-      }
-
-      function handleChange(field, value) {
-        setForm((prev) => ({ ...prev, [field]: value }));
-      }
-
-      const filtered = search.trim()
-        ? events.filter(
-            (e) =>
-              e.title.toLowerCase().includes(search.toLowerCase()) ||
-              e.category.toLowerCase().includes(search.toLowerCase())
-          )
-        : events;
+      const filteredEvents = events.filter((e) => {
+        const q = query.toLowerCase();
+        return (
+          e.title.toLowerCase().includes(q) ||
+          e.category.toLowerCase().includes(q) ||
+          (e.location || "").toLowerCase().includes(q) ||
+          (e.host || "").toLowerCase().includes(q)
+        );
+      });
 
       return (
-        <div style={styles.page}>
-          <header style={styles.header}>
-            <h1 style={styles.h1}>Club Events</h1>
-            <p style={styles.subtitle}>Manage and browse all upcoming club events</p>
+        <div>
+          <NavBar />
+          <Toast message={toast.message} color={toast.color} />
+
+          <header>
+            <h1>Student Club Portal</h1>
+            <p>Browse events and add them to your registration cart.</p>
           </header>
 
-          {/* ── Personal Information Card ── */}
-          <div style={styles.card}>
-            <h2 style={styles.h2}>Personal Information</h2>
+          <PersonalInfoBox info={info} errors={errors} onChange={handleInfoChange} />
 
-            {regSaved ? (
-              <div>
-                <div style={styles.regConfirm}>
-                  <span style={styles.checkIcon}>✓</span>
-                  <span>
-                    Registered as{" "}
-                    <strong>{reg.firstName} {reg.lastName}</strong>
-                    {" "}—{" "}{reg.email}{" "}—{" "}{reg.phone}{" "}—{" "}{reg.participationType}
-                  </span>
-                </div>
-                <div style={styles.btnRow}>
-                  <button style={styles.btn} onClick={editReg}>
-                    Edit Info
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div>
-                <div style={styles.formGrid}>
-                  <div style={styles.formGroup}>
-                    <label style={styles.label}>
-                      First Name <span style={styles.req}>*</span>
-                    </label>
-                    <input
-                      style={styles.input}
-                      type="text"
-                      value={reg.firstName}
-                      onChange={(e) => handleRegChange("firstName", e.target.value)}
-                      placeholder="e.g. Jane"
-                    />
-                  </div>
+          <ParticipationBox selected={participationType} error={errors.participationType} onChange={(val) => { setParticipationType(val); setErrors((prev) => ({ ...prev, participationType: "" })); }} />
 
-                  <div style={styles.formGroup}>
-                    <label style={styles.label}>
-                      Last Name <span style={styles.req}>*</span>
-                    </label>
-                    <input
-                      style={styles.input}
-                      type="text"
-                      value={reg.lastName}
-                      onChange={(e) => handleRegChange("lastName", e.target.value)}
-                      placeholder="e.g. Smith"
-                    />
-                  </div>
+          <SessionsBox selected={selectedSessions} error={errors.sessions} onToggle={toggleSession} />
 
-                  <div style={styles.formGroup}>
-                    <label style={styles.label}>
-                      Email Address <span style={styles.req}>*</span>
-                    </label>
-                    <input
-                      style={styles.input}
-                      type="email"
-                      value={reg.email}
-                      onChange={(e) => handleRegChange("email", e.target.value)}
-                      placeholder="e.g. jane@psu.edu"
-                    />
-                  </div>
-
-                  <div style={styles.formGroup}>
-                    <label style={styles.label}>
-                      Phone Number <span style={styles.req}>*</span>
-                    </label>
-                    <input
-                      style={styles.input}
-                      type="tel"
-                      value={reg.phone}
-                      onChange={(e) => handleRegChange("phone", e.target.value)}
-                      placeholder="e.g. (814) 555-0100"
-                    />
-                  </div>
-
-                  <div style={{ ...styles.formGroup, gridColumn: "1 / -1" }}>
-                    <label style={styles.label}>
-                      Participation Type <span style={styles.req}>*</span>
-                    </label>
-                    <div style={styles.radioGroup}>
-                      {PARTICIPATION_TYPES.map((type) => (
-                        <label key={type} style={styles.radioLabel}>
-                          <input
-                            type="radio"
-                            name="participationType"
-                            value={type}
-                            checked={reg.participationType === type}
-                            onChange={(e) => handleRegChange("participationType", e.target.value)}
-                            style={styles.radioInput}
-                          />
-                          {type}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {regError && <div style={styles.errorMsg}>{regError}</div>}
-
-                <div style={styles.btnRow}>
-                  <button style={styles.btnPrimary} onClick={saveReg}>
-                    Save Information
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* ── Event Form Card ── */}
-          <div style={styles.card}>
-            <h2 style={styles.h2}>
-              {editingId !== null ? "Edit Event" : "Add New Event"}
-            </h2>
-
-            <div style={styles.formGrid}>
-              {/* Event ID (read-only) */}
-              <div style={{ ...styles.formGroup, gridColumn: "1 / -1" }}>
-                <label style={styles.label}>Event ID</label>
-                <input
-                  style={{ ...styles.input, ...styles.inputReadonly }}
-                  type="text"
-                  value={editingId ?? ""}
-                  readOnly
-                  placeholder="Auto-generated"
-                />
-              </div>
-
-              {/* Title */}
-              <div style={styles.formGroup}>
-                <label style={styles.label}>
-                  Event Title <span style={styles.req}>*</span>
-                </label>
-                <input
-                  style={styles.input}
-                  type="text"
-                  value={form.title}
-                  onChange={(e) => handleChange("title", e.target.value)}
-                  placeholder="e.g. Spring Kickoff Night"
-                />
-              </div>
-
-              {/* Category */}
-              <div style={styles.formGroup}>
-                <label style={styles.label}>
-                  Category <span style={styles.req}>*</span>
-                </label>
-                <select
-                  style={styles.input}
-                  value={form.category}
-                  onChange={(e) => handleChange("category", e.target.value)}
-                >
-                  <option value="">-- Select Category --</option>
-                  {CATEGORIES.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Duration */}
-              <div style={styles.formGroup}>
-                <label style={styles.label}>
-                  Event Length <span style={styles.req}>*</span>
-                </label>
-                <input
-                  style={styles.input}
-                  type="text"
-                  value={form.duration}
-                  onChange={(e) => handleChange("duration", e.target.value)}
-                  placeholder="e.g. 2 hours"
-                />
-              </div>
-
-              {/* Fee */}
-              <div style={styles.formGroup}>
-                <label style={styles.label}>
-                  Registration Fee <span style={styles.req}>*</span>
-                </label>
-                <select
-                  style={styles.input}
-                  value={form.fee}
-                  onChange={(e) => handleChange("fee", e.target.value)}
-                >
-                  <option value="">-- Select Fee --</option>
-                  {FEES.map((f) => (
-                    <option key={f} value={f}>{f}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Location */}
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Location</label>
-                <input
-                  style={styles.input}
-                  type="text"
-                  value={form.location}
-                  onChange={(e) => handleChange("location", e.target.value)}
-                  placeholder="e.g. HUB Room 233"
-                />
-              </div>
-
-              {/* Host */}
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Speaker / Host</label>
-                <input
-                  style={styles.input}
-                  type="text"
-                  value={form.host}
-                  onChange={(e) => handleChange("host", e.target.value)}
-                  placeholder="e.g. Dr. Jane Smith"
-                />
-              </div>
-            </div>
-
-            {error && <div style={styles.errorMsg}>{error}</div>}
-            {success && <div style={styles.successMsg}>{success}</div>}
-
-            <div style={styles.btnRow}>
-              <button style={styles.btnPrimary} onClick={saveEvent}>
-                {editingId !== null ? "Update Event" : "Add Event"}
-              </button>
-              {editingId !== null && (
-                <button style={styles.btn} onClick={cancelEdit}>
-                  Cancel
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* ── Table Card ── */}
-          <div style={styles.card}>
-            <div style={styles.tableHeader}>
-              <h2 style={styles.h2}>Event Catalog</h2>
+          <main>
+            <section className="events-col">
+              <h2>Browse Events</h2>
               <input
-                style={styles.searchInput}
                 type="text"
-                placeholder="Search by title or category..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by name, category, location..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
               />
-            </div>
+              {filteredEvents.length === 0 ? (
+                <p className="empty">No events match your search.</p>
+              ) : (
+                filteredEvents.map((evt) => (
+                  <EventCard
+                    key={evt.id}
+                    event={evt}
+                    onAdd={addToCart}
+                    inCart={cartIds.has(evt.id)}
+                  />
+                ))
+              )}
+            </section>
 
-            <div style={styles.tableWrap}>
-              <table style={styles.table}>
-                <thead>
-                  <tr>
-                    {["ID", "Title", "Category", "Length", "Fee", "Location", "Host", "Actions"].map(
-                      (h) => (
-                        <th key={h} style={styles.th}>{h}</th>
-                      )
-                    )}
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.length === 0 ? (
-                    <tr>
-                      <td colSpan={8} style={styles.emptyMsg}>
-                        No events found.
-                      </td>
-                    </tr>
+            <aside className="cart-col">
+              <div className="cart-card">
+                <div className="cart-header">
+                  <h2>Your Cart</h2>
+                  <span className="cart-count">{cart.length}</span>
+                </div>
+                <div className="cart-body">
+                  {cart.length === 0 ? (
+                    <p className="empty">Your cart is empty.</p>
                   ) : (
-                    filtered.map((ev) => (
-                      <tr key={ev.id}>
-                        <td style={styles.td}>{ev.id}</td>
-                        <td style={styles.td}><strong>{ev.title}</strong></td>
-                        <td style={styles.td}>
-                          <span style={styles.badge}>{ev.category}</span>
-                        </td>
-                        <td style={styles.td}>{ev.duration}</td>
-                        <td style={styles.td}>{ev.fee}</td>
-                        <td style={styles.td}>{ev.location || "—"}</td>
-                        <td style={styles.td}>{ev.host || "—"}</td>
-                        <td style={styles.td}>
-                          <button style={styles.btnEdit} onClick={() => editEvent(ev.id)}>
-                            Edit
-                          </button>
-                          <button style={styles.btnDelete} onClick={() => deleteEvent(ev.id)}>
-                            Delete
-                          </button>
-                        </td>
-                      </tr>
+                    cart.map((item, i) => (
+                      <CartItem key={item.id} item={item} index={i} onRemove={removeFromCart} />
                     ))
                   )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+                </div>
+                <button className="btn-checkout" onClick={checkout}>Register</button>
+              </div>
+            </aside>
+          </main>
 
-          <footer style={styles.footer}>
-            <p>© 2026 Student Club Portal. IST256 Group Project.</p>
+          <footer>
+            2026 Student Club Portal. IST256 Group Project.
           </footer>
         </div>
       );
     }
 
-    const styles = {
-      page: {
-        maxWidth: "900px",
-        margin: "0 auto",
-        padding: "1.5rem 1rem",
-        fontFamily: "sans-serif",
-        color: "#1a1a1a",
-      },
-      header: {
-        textAlign: "center",
-        marginBottom: "1.5rem",
-      },
-      h1: {
-        fontSize: "26px",
-        fontWeight: "600",
-        margin: 0,
-      },
-      subtitle: {
-        fontSize: "14px",
-        color: "#666",
-        marginTop: "4px",
-      },
-      card: {
-        background: "#fff",
-        border: "1px solid #e0e0e0",
-        borderRadius: "12px",
-        padding: "1.25rem",
-        marginBottom: "1.25rem",
-      },
-      h2: {
-        fontSize: "18px",
-        fontWeight: "500",
-        marginBottom: "1rem",
-        margin: "0 0 1rem 0",
-      },
-      formGrid: {
-        display: "grid",
-        gridTemplateColumns: "1fr 1fr",
-        gap: "12px",
-      },
-      formGroup: {
-        display: "flex",
-        flexDirection: "column",
-        gap: "4px",
-      },
-      label: {
-        fontSize: "13px",
-        color: "#555",
-      },
-      req: {
-        color: "#c0392b",
-      },
-      input: {
-        padding: "8px 10px",
-        border: "1px solid #ccc",
-        borderRadius: "8px",
-        fontSize: "14px",
-        fontFamily: "sans-serif",
-        background: "#fff",
-        color: "#1a1a1a",
-        width: "100%",
-        boxSizing: "border-box",
-      },
-      inputReadonly: {
-        background: "#f5f5f5",
-        color: "#999",
-      },
-      errorMsg: {
-        marginTop: "10px",
-        padding: "8px 12px",
-        background: "#fdecea",
-        color: "#c0392b",
-        border: "1px solid #f5c6cb",
-        borderRadius: "8px",
-        fontSize: "13px",
-      },
-      successMsg: {
-        marginTop: "10px",
-        padding: "8px 12px",
-        background: "#eafaf1",
-        color: "#1e8449",
-        border: "1px solid #a9dfbf",
-        borderRadius: "8px",
-        fontSize: "13px",
-      },
-      radioGroup: {
-        display: "flex",
-        gap: "20px",
-        marginTop: "4px",
-        flexWrap: "wrap",
-      },
-      radioLabel: {
-        display: "flex",
-        alignItems: "center",
-        gap: "6px",
-        fontSize: "14px",
-        cursor: "pointer",
-        color: "#1a1a1a",
-      },
-      radioInput: {
-        accentColor: "#2471a3",
-        width: "15px",
-        height: "15px",
-        cursor: "pointer",
-      },
-      regConfirm: {
-        display: "flex",
-        alignItems: "center",
-        gap: "10px",
-        padding: "10px 14px",
-        background: "#eafaf1",
-        border: "1px solid #a9dfbf",
-        borderRadius: "8px",
-        fontSize: "13px",
-        color: "#1e8449",
-      },
-      checkIcon: {
-        fontSize: "16px",
-        fontWeight: "bold",
-      },
-      btnRow: {
-        display: "flex",
-        gap: "8px",
-        marginTop: "1rem",
-      },
-      btn: {
-        padding: "8px 18px",
-        border: "1px solid #ccc",
-        borderRadius: "8px",
-        background: "transparent",
-        fontSize: "14px",
-        cursor: "pointer",
-        fontFamily: "sans-serif",
-      },
-      btnPrimary: {
-        padding: "8px 18px",
-        border: "1px solid #2471a3",
-        borderRadius: "8px",
-        background: "#eaf4fb",
-        color: "#1a5276",
-        fontSize: "14px",
-        cursor: "pointer",
-        fontFamily: "sans-serif",
-      },
-      tableHeader: {
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: "12px",
-        marginBottom: "1rem",
-      },
-      searchInput: {
-        padding: "7px 10px",
-        border: "1px solid #ccc",
-        borderRadius: "8px",
-        fontSize: "13px",
-        width: "220px",
-        fontFamily: "sans-serif",
-      },
-      tableWrap: {
-        overflowX: "auto",
-      },
-      table: {
-        width: "100%",
-        borderCollapse: "collapse",
-        fontSize: "13px",
-      },
-      th: {
-        textAlign: "left",
-        padding: "8px 10px",
-        borderBottom: "1px solid #ddd",
-        color: "#555",
-        fontWeight: "500",
-      },
-      td: {
-        padding: "8px 10px",
-        borderBottom: "1px solid #f0f0f0",
-        verticalAlign: "middle",
-      },
-      badge: {
-        background: "#eaf4fb",
-        color: "#1a5276",
-        padding: "2px 8px",
-        borderRadius: "99px",
-        fontSize: "12px",
-      },
-      btnEdit: {
-        padding: "4px 10px",
-        fontSize: "12px",
-        border: "1px solid #ccc",
-        borderRadius: "6px",
-        background: "transparent",
-        cursor: "pointer",
-        marginRight: "4px",
-        fontFamily: "sans-serif",
-      },
-      btnDelete: {
-        padding: "4px 10px",
-        fontSize: "12px",
-        border: "1px solid #e74c3c",
-        borderRadius: "6px",
-        background: "transparent",
-        color: "#c0392b",
-        cursor: "pointer",
-        fontFamily: "sans-serif",
-      },
-      emptyMsg: {
-        textAlign: "center",
-        color: "#aaa",
-        padding: "2rem",
-      },
-      footer: {
-        textAlign: "center",
-        fontSize: "13px",
-        color: "#999",
-        marginTop: "1rem",
-      },
-    };
-
-    function App() {
-      return <ClubEvents />;
-    }
-
     const root = ReactDOM.createRoot(document.getElementById("root"));
-    root.render(<App />);
+    root.render(<ShoppingCart />);
   </script>
 </body>
-<footer>
-    <p><strong>© 2026 Student Club Portal. IST256 Group Project.</strong></p>
-</footer>
 </html>

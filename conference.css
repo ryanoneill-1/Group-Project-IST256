@@ -1,90 +1,50 @@
-pnav {
-    background: white;
-    border-bottom: 2px solid #e2e8f0;
-    padding: 12px 0;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    box-shadow: 0 2px 12px rgba(11, 31, 77, 0.07);
-}
-.topnav ul {
-    list-style: none;
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-    padding: 0;
-    margin: 0;
-}
-
-.topnav a {
-    text-decoration: none;
-    color: #1e40af;
-    font-weight: 600;
-    font-size: 0.95rem;
-    padding: 6px 14px;
-    border-radius: 8px;
-    transition: background 0.2s, color 0.2s;
-}
-
-.topnav a:hover,
-.topnav a.active {
-    background: #2563eb;
-    color: white;
-}
-footer {
-    text-align: center;
-    background: #0b1f4d;
-    color: #93c5fd;
-    padding: 20px;
-    font-size: 0.88rem;
-}
-header p {
-    color: #64748b;
-    font-size: 0.95rem;
-    margin-top: 4px;
-}
-/* ── Reset ── */
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
-/* ── Base ── */
 body {
   font-family: Georgia, serif;
   background: #f8f7f4;
   color: #1a1a1a;
 }
 
-/* ── Navigation ── */
-nav {
+.topnav {
+  background: white;
+  border-bottom: 2px solid #e2e8f0;
+  padding: 12px 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 12px rgba(11, 31, 77, 0.07);
+}
+
+.topnav ul {
+  list-style: none;
   display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  padding: 10px 24px;
-  background: #1e293b;
+  justify-content: center;
+  gap: 20px;
+  padding: 0;
+  margin: 0;
 }
 
-nav a {
-  color: #94a3b8;
+.topnav a {
   text-decoration: none;
-  font-size: 0.85rem;
-  padding: 6px 12px;
-  border-radius: 4px;
-  font-family: sans-serif;
+  color: #1e40af;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 6px 14px;
+  border-radius: 8px;
+  transition: background 0.2s, color 0.2s;
 }
 
-nav a.active {
-  color: #fff;
-  background: #3b82f6;
+.topnav a:hover,
+.topnav a.active {
+  background: #2563eb;
+  color: white;
 }
 
-nav a:hover {
-  color: #fff;
-}
-
-/* ── Header ── */
 header {
   text-align: center;
   padding: 40px 24px 20px;
@@ -102,7 +62,6 @@ header p {
   font-family: sans-serif;
 }
 
-/* ── Main Layout ── */
 main {
   display: flex;
   gap: 24px;
@@ -127,7 +86,6 @@ main {
   margin-bottom: 16px;
 }
 
-/* ── Search Input ── */
 input[type="text"] {
   width: 100%;
   padding: 10px 14px;
@@ -139,7 +97,6 @@ input[type="text"] {
   outline: none;
 }
 
-/* ── Event Cards ── */
 .event-card {
   background: #fff;
   border-radius: 10px;
@@ -178,7 +135,6 @@ input[type="text"] {
   margin-top: 6px;
 }
 
-/* ── Badge ── */
 .badge {
   display: inline-block;
   color: #fff;
@@ -190,7 +146,6 @@ input[type="text"] {
   margin-bottom: 6px;
 }
 
-/* ── Buttons ── */
 .btn-add {
   border: none;
   border-radius: 8px;
@@ -237,7 +192,6 @@ input[type="text"] {
   background: #059669;
 }
 
-/* ── Cart ── */
 .cart-card {
   border: 1px solid #e2e8f0;
   border-radius: 12px;
@@ -291,7 +245,6 @@ input[type="text"] {
   font-size: 0.9rem;
 }
 
-/* ── Misc ── */
 .empty {
   color: #94a3b8;
   font-family: sans-serif;
@@ -311,17 +264,15 @@ input[type="text"] {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-/* ── Footer ── */
 footer {
   text-align: center;
+  background: #0b1f4d;
+  color: #93c5fd;
   padding: 20px;
-  color: #94a3b8;
+  font-size: 0.88rem;
   font-family: sans-serif;
-  font-size: 0.85rem;
-  border-top: 1px solid #e2e8f0;
 }
 
-/* ── Personal Info Box ── */
 .info-box {
   background: #fff;
   border-radius: 12px;
@@ -403,7 +354,6 @@ footer {
   min-height: 16px;
 }
 
-/* ── Participation Type Box ── */
 .participation-box {
   background: #fff;
   border-radius: 12px;
@@ -498,7 +448,6 @@ footer {
   margin-top: 10px;
 }
 
-/* ── Sessions Box ── */
 .sessions-box {
   background: #fff;
   border-radius: 12px;
@@ -586,20 +535,14 @@ footer {
   color: #64748b;
 }
 
-.session-info .session-tag {
-  display: inline-block;
-  font-size: 0.68rem;
-  font-weight: 600;
-  padding: 1px 7px;
-  border-radius: 99px;
-  color: #fff;
-  margin-top: 2px;
-  width: fit-content;
-}
-
 .sessions-error {
   font-family: sans-serif;
   font-size: 0.78rem;
   color: #ef4444;
   margin-top: 10px;
+}
+
+/* ── Page padding wrapper ── */
+.page-content {
+  padding: 0 24px;
 }

@@ -56,12 +56,16 @@
 
     function NavBar() {
       return (
-        <nav>
-          {NAV_LINKS.map(([label, href]) => (
-            <a key={label} href={href} className={label === "Shopping Cart" ? "active" : ""}>
-              {label}
-            </a>
-          ))}
+        <nav className="topnav">
+          <ul>
+            {NAV_LINKS.map(([label, href]) => (
+              <li key={label}>
+                <a href={href} className={label === "Session Registration" ? "active" : ""}>
+                  {label}
+                </a>
+              </li>
+            ))}
+          </ul>
         </nav>
       );
     }
@@ -187,12 +191,12 @@
     }
 
     const CONFERENCES = [
-      { id: "c1", title: "AI & the Future of Work", speaker: "Dr. Linda Park", time: "Sat 9:00 AM", track: "Technology", color: "#3b82f6" },
-      { id: "c2", title: "Sustainable Campus Initiatives", speaker: "Prof. Marcus Green", time: "Sat 11:00 AM", track: "Environment", color: "#10b981" },
-      { id: "c3", title: "Entrepreneurship 101", speaker: "Sarah Okonkwo, MBA", time: "Sat 1:00 PM", track: "Business", color: "#f59e0b" },
-      { id: "c4", title: "Mental Health in College", speaker: "Dr. James Liu", time: "Sat 3:00 PM", track: "Wellness", color: "#ec4899" },
-      { id: "c5", title: "Breaking into Tech Internships", speaker: "Alumni Panel", time: "Sun 10:00 AM", track: "Career", color: "#8b5cf6" },
-      { id: "c6", title: "Data Science for Everyone", speaker: "Prof. Aisha Ndiaye", time: "Sun 1:00 PM", track: "Technology", color: "#3b82f6" },
+      { id: "c1", title: "AI & the Future of Work", speaker: "Dr. Linda Park", time: "Sat 9:00 AM" },
+      { id: "c2", title: "Sustainable Campus Initiatives", speaker: "Prof. Marcus Green", time: "Sat 11:00 AM" },
+      { id: "c3", title: "Entrepreneurship 101", speaker: "Sarah Okonkwo, MBA", time: "Sat 1:00 PM" },
+      { id: "c4", title: "Mental Health in College", speaker: "Dr. James Liu", time: "Sat 3:00 PM" },
+      { id: "c5", title: "Breaking into Tech Internships", speaker: "Alumni Panel", time: "Sun 10:00 AM" },
+      { id: "c6", title: "Data Science for Everyone", speaker: "Prof. Aisha Ndiaye", time: "Sun 1:00 PM" },
     ];
 
     function SessionsBox({ selected, error, onToggle }) {
@@ -231,7 +235,7 @@
       );
     }
 
-    function ShoppingCart() {
+    function ConferenceRegistration() {
       const [events] = useState(() => readLocalStorage("events", SEED_EVENTS));
       const [cart, setCart] = useState(() => readLocalStorage("cart", []));
       const [query, setQuery] = useState("");
@@ -332,15 +336,17 @@
           <Toast message={toast.message} color={toast.color} />
 
           <header>
-            <h1>Student Club Portal</h1>
-            <p>Browse events and add them to your registration cart.</p>
+            <h1>Conference Registration</h1>
+            <p>Fill in your details, select your sessions, and register below.</p>
           </header>
 
-          <PersonalInfoBox info={info} errors={errors} onChange={handleInfoChange} />
+          <div className="page-content">
+            <PersonalInfoBox info={info} errors={errors} onChange={handleInfoChange} />
 
-          <ParticipationBox selected={participationType} error={errors.participationType} onChange={(val) => { setParticipationType(val); setErrors((prev) => ({ ...prev, participationType: "" })); }} />
+            <ParticipationBox selected={participationType} error={errors.participationType} onChange={(val) => { setParticipationType(val); setErrors((prev) => ({ ...prev, participationType: "" })); }} />
 
-          <SessionsBox selected={selectedSessions} error={errors.sessions} onToggle={toggleSession} />
+            <SessionsBox selected={selectedSessions} error={errors.sessions} onToggle={toggleSession} />
+          </div>
 
           <main>
             <section className="events-col">
@@ -393,7 +399,7 @@
     }
 
     const root = ReactDOM.createRoot(document.getElementById("root"));
-    root.render(<ShoppingCart />);
+    root.render(<ConferenceRegistration />);
   </script>
 </body>
 </html>

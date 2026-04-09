@@ -138,8 +138,7 @@ $(document).ready(function () {
             return;
         }
         const filtered = events.filter(function (e) {
-            return e.title.toLowerCase().includes(query) ||
-                   e.category.toLowerCase().includes(query);
+            return e.title.toLowerCase().includes(query) || e.category.toLowerCase().includes(query);
         });
         displayEvents(filtered);
     });

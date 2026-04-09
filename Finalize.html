@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Event Finalization – Student Club Portal</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <link rel="stylesheet" href="Finalizestyle.css">
+</head>
+<body>
+
+    <header>
+        <h1>Event Finalization</h1>
+        <p>Review your cart and confirm your event registrations</p>
+    </header>
+
+    <nav class="topnav">
+        <ul>
+            <li><a href="Homepage.html">Homepage</a></li>
+            <li><a href="Registration.html">Student Registration</a></li>
+            <li><a href="Events.html">Club Events</a></li>
+            <li><a href="ShoppingCart.html">Shopping Cart</a></li>
+            <li><a href="Storefront.html">Storefront</a></li>
+            <li><a href="conference-registration.html">Session Registration</a></li>
+            <li><a class="active" href="Finalize.html">Finalize</a></li>
+            <li><a href="OrderHistory.html">Order History</a></li>
+            <li><a href="Approval.html">Admin Approval</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <div id="react-root"></div>
+    </main>
+
+    <footer>
+        <p><strong>© 2026 Student Club Portal. IST256 Group Project.</strong></p>
+    </footer>
+
+    <script type="text/babel">
+
+        const emptyForm = () => ({
+            firstName: "",
+            lastName: "",
+            email: "",
+            phone: "",
+            attendanceType: "in-person",
+            specialRequests: "",
+            emergencyContact: "",
+            agreeTerms: false,
+        });
+
+        function App() {
+            const [cartEvents, setCartEvents]   = React.useState([]);
+            const [form, setForm]               = React.useState(emptyForm());
+            const [errors, setErrors]           = React.useState({});
+            const [submitted, setSubmitted]     = React.useState(false);
+            const [jsonDoc, setJsonDoc]         = React.useState(null);
+            const [ajaxMsg, setAjaxMsg]         = React.useState({ text: "", cls: "" });
+
+            React.useEffect(() => {
+                $.ajax({
+                    url: "https://jsonplaceholder.typicode.com/posts/1",
+                    method: "GET",
+                    success: function () {
+                        const stored = JSON.parse(localStorage.getItem("cart")) || [];
+                        setCartEvents(stored);
+                    },
+                    error: function () {
+                        const stored = JSON.parse(localStorage.getItem("cart")) || [];
+                        setCartEvents(stored);
+                    }
+                });
+            }, []);
+
+            const handleChange = (e) => {
+                const { name, value, type, checked } = e.target;
+                setForm(prev => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
+                if (errors[name]) setErrors(prev => ({ ...prev, [name]: "" }));
+            };
+
+            const validate = () => {
+                const e = {};
+                if (!form.firstName.trim())   e.firstName   = "First name is required.";
+                if (!form.lastName.trim())    e.lastName    = "Last name is required.";
+                if (!form.email.trim())       e.email       = "Email is required.";
+                else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
+                                              e.email       = "Enter a valid email address.";
+                if (form.phone && !/^\+?[\d\s\-().]{7,15}$/.test(form.phone))
+                                              e.phone       = "Enter a valid phone number.";
+                if (!form.attendanceType)     e.attendanceType = "Please select an attendance type.";
+                if (cartEvents.length === 0)  e.cart        = "Your cart is empty. Add events before finalizing.";
+                if (!form.agreeTerms)         e.agreeTerms  = "You must agree to the terms.";
+                return e;
+            };
+
+            const buildJson = () => ({
+                submittedAt: new Date().toISOString(),
+                registrant: {
+                    firstName:        form.firstName,
+                    lastName:         form.lastName,
+                    email:            form.email,
+                    phone:            form.phone || null,
+                    emergencyContact: form.emergencyContact || null,
+                },
+                finalizationOptions: {
+                    attendanceType:  form.attendanceType,
+                    specialRequests: form.specialRequests || null,
+                    selectedEvents:  cartEvents.map(e => ({
+                        id:       e.id,
+                        title:    e.title,
+                        category: e.category,
+                        duration: e.duration,
+                        fee:      e.fee,
+                        location: e.location || null,
+                        host:     e.host || null,
+                    })),
+                },
+                termsAgreed: form.agreeTerms,
+            });
+
+            const handleSubmit = () => {
+                const errs = validate();
+                if (Object.keys(errs).length > 0) {
+                    setErrors(errs);
+                    const firstErr = document.querySelector(".field-error");
+                    if (firstErr) firstErr.scrollIntoView({ behavior: "smooth", block: "center" });
+                    return;
+                }
+
+                const doc = buildJson();
+                setJsonDoc(doc);
+                setAjaxMsg({ text: "⏳ Submitting your registration...", cls: "sending" });
+
+                $.ajax({
+                    url: "http://localhost:3000/api/finalize",
+                    method: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify(doc),
+                    success: function (response) {
+                        setAjaxMsg({ text: "Registration finalized! Order ID: " + response.order.id, cls: "success" });
+                        setSubmitted(true);
+                        localStorage.removeItem("cart");
+                    },
+                    error: function (xhr) {
+                        setAjaxMsg({ text: "Could not reach server. Is server.js running? (node server.js)", cls: "error" });
+                    }
+                });
+            };
+
+            const handleReset = () => {
+                setForm(emptyForm());
+                setErrors({});
+                setSubmitted(false);
+                setJsonDoc(null);
+                setAjaxMsg({ text: "", cls: "" });
+                const stored = JSON.parse(localStorage.getItem("cart")) || [];
+                setCartEvents(stored);
+            };
+
+            if (submitted) {
+                return (
+                    <div className="success-panel">
+                        <div style={{ fontSize: "3rem" }}>🎉</div>
+                        <h4>Registration Finalized!</h4>
+                        <p>Thank you, <strong>{form.firstName} {form.lastName}</strong>! Your events have been confirmed.</p>
+                        <p>A confirmation will be sent to <strong>{form.email}</strong>.</p>
+                        <p className={`ajax-status ${ajaxMsg.cls}`}>{ajaxMsg.text}</p>
+
+                        {jsonDoc && (
+                            <div className="json-preview-wrap">
+                                <p className="json-label">JSON Document Sent to API:</p>
+                                <pre className="json-preview">{JSON.stringify(jsonDoc, null, 2)}</pre>
+                            </div>
+                        )}
+
+                        <button className="btn-primary-site mt-3" onClick={handleReset}>
+                            Start Over
+                        </button>
+                    </div>
+                );
+            }
+
+            return (
+                <div>
+                    <div className="page-title">
+                        <h2>Finalize Your Event Registrations</h2>
+                        <p>Confirm your details below to complete registration for your selected events.</p>
+                    </div>
+
+                    <div className="form-card">
+                        <h5>🛒 Events in Your Cart</h5>
+                        {errors.cart && <div className="field-error mb-2">{errors.cart}</div>}
+                        {cartEvents.length === 0 ? (
+                            <p className="empty-cart-msg">
+                                Your cart is empty. <a href="ShoppingCart.html">Go to Shopping Cart</a> to add events.
+                            </p>
+                        ) : (
+                            <div className="cart-review-grid">
+                                {cartEvents.map(event => (
+                                    <div key={event.id} className="cart-review-card">
+                                        <div className="cart-review-top">
+                                            <span className="rev-badge">{event.category}</span>
+                                            <span className="rev-fee">{event.fee}</span>
+                                        </div>
+                                        <div className="cart-review-title">{event.title}</div>
+                                        <div className="cart-review-meta">
+                                            <span>⏱ {event.duration}</span>
+                                            <span>📍 {event.location || "TBD"}</span>
+                                            <span>🎤 {event.host || "TBD"}</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="form-card">
+                        <h5>👤 Your Information</h5>
+                        <div className="row g-3">
+                            <div className="col-md-6">
+                                <label className="form-label">First Name <span className="required-star">*</span></label>
+                                <input
+                                    className={`form-control ${errors.firstName ? "is-invalid" : ""}`}
+                                    name="firstName" value={form.firstName}
+                                    onChange={handleChange} placeholder="Jane"/>
+                                {errors.firstName && <div className="field-error">{errors.firstName}</div>}
+                            </div>
+                            <div className="col-md-6">
+                                <label className="form-label">Last Name <span className="required-star">*</span></label>
+                                <input
+                                    className={`form-control ${errors.lastName ? "is-invalid" : ""}`}
+                                    name="lastName" value={form.lastName}
+                                    onChange={handleChange} placeholder="Smith"/>
+                                {errors.lastName && <div className="field-error">{errors.lastName}</div>}
+                            </div>
+                            <div className="col-md-6">
+                                <label className="form-label">Email Address <span className="required-star">*</span></label>
+                                <input
+                                    className={`form-control ${errors.email ? "is-invalid" : ""}`}
+                                    type="email" name="email" value={form.email}
+                                    onChange={handleChange} placeholder="jane@psu.edu"/>
+                                {errors.email && <div className="field-error">{errors.email}</div>}
+                            </div>
+                            <div className="col-md-6">
+                                <label className="form-label">Phone <span style={{ color: "#888", fontSize: "0.8rem" }}>(optional)</span></label>
+                                <input
+                                    className={`form-control ${errors.phone ? "is-invalid" : ""}`}
+                                    name="phone" value={form.phone}
+                                    onChange={handleChange} placeholder="+1 555-000-0000"/>
+                                {errors.phone && <div className="field-error">{errors.phone}</div>}
+                            </div>
+                            <div className="col-12">
+                                <label className="form-label">Emergency Contact <span style={{ color: "#888", fontSize: "0.8rem" }}>(optional)</span></label>
+                                <input
+                                    className="form-control"
+                                    name="emergencyContact" value={form.emergencyContact}
+                                    onChange={handleChange} placeholder="Name and phone number"/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="form-card">
+                        <h5>🎟️ Attendance Preference <span className="required-star">*</span></h5>
+                        <div className="row g-3 justify-content-center">
+                            {[
+                                { val: "in-person", label: "In-Person",  desc: "Attend the event on campus",          icon: "🏛️" },
+                                { val: "virtual",   label: "Virtual",    desc: "Join via live stream or video call",   icon: "💻" },
+                                { val: "hybrid",    label: "Hybrid",     desc: "Mix of in-person and virtual access",  icon: "🔀" },
+                            ].map(opt => (
+                                <div className="col-md-4" key={opt.val}>
+                                    <div
+                                        onClick={() => { setForm(p => ({ ...p, attendanceType: opt.val })); setErrors(p => ({ ...p, attendanceType: "" })); }}
+                                        style={{
+                                            border: `2px solid ${form.attendanceType === opt.val ? "cornflowerblue" : "#ddd"}`,
+                                            background: form.attendanceType === opt.val ? "#eef3ff" : "white",
+                                            borderRadius: 8, padding: "18px 14px", cursor: "pointer",
+                                            transition: "all 0.2s", textAlign: "center"
+                                        }}>
+                                        <div style={{ fontSize: "2rem" }}>{opt.icon}</div>
+                                        <div style={{ fontWeight: 700 }}>{opt.label}</div>
+                                        <div style={{ fontSize: "0.8rem", color: "#666", marginTop: 4 }}>{opt.desc}</div>
+                                        <input type="radio" name="attendanceType" value={opt.val}
+                                            checked={form.attendanceType === opt.val}
+                                            onChange={handleChange} style={{ marginTop: 8 }}/>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        {errors.attendanceType && <div className="field-error mt-2">{errors.attendanceType}</div>}
+                    </div>
+
+                    <div className="form-card">
+                        <h5>Additional Details</h5>
+                        <div className="col-12">
+                            <label className="form-label">Special Requests or Notes <span style={{ color: "#888", fontSize: "0.8rem" }}>(optional)</span></label>
+                            <textarea
+                                className="form-control"
+                                name="specialRequests" value={form.specialRequests}
+                                onChange={handleChange} rows={3}
+                                placeholder="Dietary needs, accessibility requirements, questions, etc."/>
+                        </div>
+                    </div>
+
+                    <div className="form-card">
+                        <h5>Confirm &amp; Submit</h5>
+                        <div className="form-check mb-3" style={{ textAlign: "left" }}>
+                            <input className="form-check-input" type="checkbox" id="agreeTerms"
+                                name="agreeTerms" checked={form.agreeTerms} onChange={handleChange}/>
+                            <label className="form-check-label" htmlFor="agreeTerms">
+                                I confirm that the information above is correct and agree to the{" "}
+                                <a href="#" style={{ color: "cornflowerblue" }}>Student Club Portal Terms & Conditions</a>.
+                            </label>
+                            {errors.agreeTerms && <div className="field-error">{errors.agreeTerms}</div>}
+                        </div>
+
+                        <div style={{ textAlign: "center", marginTop: 8 }}>
+                            <button className="btn-primary-site" onClick={handleSubmit}>
+                                🚀 Finalize Registration
+                            </button>
+                            <button className="btn-reset-site" onClick={handleReset}>
+                                Reset
+                            </button>
+                        </div>
+
+                        {ajaxMsg.text && (
+                            <div className={`ajax-status ${ajaxMsg.cls}`} style={{ textAlign: "center" }}>
+                                {ajaxMsg.text}
+                            </div>
+                        )}
+                    </div>
+
+                    {jsonDoc && (
+                        <div className="form-card">
+                            <h5>📄 JSON Preview</h5>
+                            <p style={{ fontSize: "0.85rem", color: "#666", marginBottom: 12 }}>
+                                This is the data that will be sent to the API.
+                            </p>
+                            <pre className="json-preview">{JSON.stringify(jsonDoc, null, 2)}</pre>
+                        </div>
+                    )}
+
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById("react-root"));
+        root.render(<App />);
+    </script>
+
+</body>
+</html>

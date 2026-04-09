@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Admin Approval – Student Club Portal</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <link rel="stylesheet" href="Regstyletyle.css">
+    <link rel="stylesheet" href="Approvalstyle.css">
+</head>
+<body>
+
+    <header>
+        <h1>⚙️ Admin Approval</h1>
+        <p>Review and approve or decline pending event registrations</p>
+    </header>
+
+    <nav class="topnav">
+        <ul>
+            <li><a href="Homepage.html">Homepage</a></li>
+            <li><a href="Registration.html">Student Registration</a></li>
+            <li><a href="Events.html">Club Events</a></li>
+            <li><a href="ShoppingCart.html">Shopping Cart</a></li>
+            <li><a href="Storefront.html">Storefront</a></li>
+            <li><a href="conference-registration.html">Session Registration</a></li>
+            <li><a href="Finalize.html">Finalize</a></li>
+            <li><a href="OrderHistory.html">Order History</a></li>
+            <li><a class="active" href="Approval.html">Admin Approval</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <div id="react-root"></div>
+    </main>
+
+    <footer>
+        <p><strong>© 2026 Student Club Portal. IST256 Group Project.</strong></p>
+    </footer>
+
+    <script type="text/babel">
+
+        function ApprovalCard({ order, onAction }) {
+            const [acting, setActing] = React.useState(false);
+            const info   = order.registrant || {};
+            const events = order.finalizationOptions?.selectedEvents || [];
+
+            const handleAction = (status) => {
+                setActing(true);
+                $.ajax({
+                    url: "http://localhost:3000/api/orders/" + order.id + "/status",
+                    method: "PUT",
+                    contentType: "application/json",
+                    data: JSON.stringify({ status }),
+                    success: function () {
+                        onAction(order.id, status);
+                    },
+                    error: function () {
+                        alert("Failed to update status. Is server.js running?");
+                        setActing(false);
+                    }
+                });
+            };
+
+            return (
+                <div className="approval-card">
+                    <div className="approval-card-top">
+                        <div className="approval-info">
+                            <div className="approval-name">
+                                {info.firstName} {info.lastName}
+                            </div>
+                            <div className="approval-email">{info.email}</div>
+                            <div className="approval-date">
+                                Submitted: {new Date(order.createdAt).toLocaleString()}
+                            </div>
+                            <div className="approval-attendance">
+                                Attendance: <strong>{order.finalizationOptions?.attendanceType || "—"}</strong>
+                            </div>
+                        </div>
+                        <div className="approval-actions">
+                            <span className="badge bg-warning text-dark mb-2">Pending</span>
+                            <button
+                                className="btn-approve"
+                                disabled={acting}
+                                onClick={() => handleAction("approved")}>
+                                ✅ Approve
+                            </button>
+                            <button
+                                className="btn-decline"
+                                disabled={acting}
+                                onClick={() => handleAction("declined")}>
+                                ❌ Decline
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="approval-events">
+                        <strong>Registered Events ({events.length}):</strong>
+                        <div className="approval-events-grid">
+                            {events.length === 0 ? (
+                                <span className="text-muted" style={{fontSize:"0.82rem"}}>No events listed.</span>
+                            ) : events.map((e, i) => (
+                                <div key={i} className="detail-event-row">
+                                    <span className="rev-badge">{e.category}</span>
+                                    <span className="detail-title">{e.title}</span>
+                                    <span className="detail-meta">{e.fee} · {e.duration}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {order.finalizationOptions?.specialRequests && (
+                        <div className="detail-notes">
+                            <strong>Special Requests:</strong> {order.finalizationOptions.specialRequests}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        function App() {
+            const [pending, setPending] = React.useState([]);
+            const [loading, setLoading] = React.useState(true);
+            const [error,   setError]   = React.useState("");
+            const [toast,   setToast]   = React.useState("");
+
+            const fetchPending = () => {
+                setLoading(true);
+                setError("");
+                $.ajax({
+                    url: "http://localhost:3000/api/orders/pending",
+                    method: "GET",
+                    success: function (data) {
+                        setPending(data);
+                        setLoading(false);
+                    },
+                    error: function () {
+                        setError("Could not connect to the server. Make sure server.js is running (node server.js).");
+                        setLoading(false);
+                    }
+                });
+            };
+
+            React.useEffect(() => { fetchPending(); }, []);
+
+            const handleAction = (id, status) => {
+                setPending(prev => prev.filter(o => o.id !== id));
+                setToast("Order #" + id + " has been " + status + ".");
+                setTimeout(() => setToast(""), 4000);
+            };
+
+            return (
+                <div>
+                    <div className="page-title">
+                        <h2>Pending Registrations</h2>
+                        <p>Review each submission and approve or decline it.</p>
+                    </div>
+
+                    {toast && (
+                        <div className="admin-toast">{toast}</div>
+                    )}
+
+                    <div className="form-card">
+                        <div className="history-toolbar">
+                            <div className="admin-count">
+                                {pending.length} pending submission{pending.length !== 1 ? "s" : ""}
+                            </div>
+                            <button className="btn-refresh" onClick={fetchPending}>↻ Refresh</button>
+                        </div>
+
+                        {loading && <p className="empty-cart-msg">Loading pending submissions...</p>}
+
+                        {error && (
+                            <div className="alert alert-danger mt-3" style={{fontSize:"0.9rem"}}>
+                                {error}
+                            </div>
+                        )}
+
+                        {!loading && !error && pending.length === 0 && (
+                            <p className="empty-cart-msg">
+                                No pending submissions. All caught up! 🎉
+                            </p>
+                        )}
+
+                        {!loading && !error && pending.map(order => (
+                            <ApprovalCard
+                                key={order.id}
+                                order={order}
+                                onAction={handleAction}
+                            />
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById("react-root"));
+        root.render(<App />);
+    </script>
+</body>
+</html>

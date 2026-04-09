@@ -15,7 +15,7 @@ main {
     text-align: center;
 }
 
-pnav {
+.toppnav {
     background: white;
     border-bottom: 2px solid #e2e8f0;
     padding: 12px 0;

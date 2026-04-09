@@ -41,7 +41,7 @@ body {
       margin-top: 40px;
     }
 
-    /* ── Page-specific styles ── */
+    /* Page specific styles */
     main { margin: 30px auto; max-width: 780px; text-align: left; }
 
     .page-title {

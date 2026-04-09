@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Conference Registration</title>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <link rel="stylesheet" href="conference.css">
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    const SEED_EVENTS = [
+      { id: 1, title: "Intro to Web Dev", category: "Workshop", duration: "2 hrs", location: "Room 101", host: "CS Club" },
+      { id: 2, title: "Resume Review Night", category: "Career", duration: "1.5 hrs", location: "Career Center", host: "Business Club" },
+      { id: 3, title: "Hackathon Kickoff", category: "Competition", duration: "48 hrs", location: "Student Union", host: "Dev Society" },
+      { id: 4, title: "Photography Walk", category: "Arts", duration: "3 hrs", location: "Campus Grounds", host: "Photo Club" },
+      { id: 5, title: "Debate Meetup", category: "Social", duration: "1 hr", location: "Library Hall", host: "Debate Team" },
+    ];
+
+    const CATEGORY_COLOR = {
+      Workshop: "#3b82f6",
+      Career: "#10b981",
+      Competition: "#f59e0b",
+      Arts: "#ec4899",
+      Social: "#8b5cf6",
+      default: "#6b7280",
+    };
+
+    function getCategoryColor(category) {
+      return CATEGORY_COLOR[category] || CATEGORY_COLOR.default;
+    }
+
+    function readLocalStorage(key, fallback) {
+      try {
+        const item = localStorage.getItem(key);
+        return item ? JSON.parse(item) : fallback;
+      } catch {
+        return fallback;
+      }
+    }
+
+    const NAV_LINKS = [
+      ["Homepage", "Homepage.html"],
+      ["Student Registration", "Registration.html"],
+      ["Club Events", "Events.html"],
+      ["Shopping Cart", "ShoppingCart.html"],
+      ["Storefront", "Storefront.html"],
+      ["Session Registration", "conference.html"],
+    ];
+
+    function NavBar() {
+      return (
+        <nav className="topnav">
+          <ul>
+            {NAV_LINKS.map(([label, href]) => (
+              <li key={label}>
+                <a href={href} className={label === "Session Registration" ? "active" : ""}>
+                  {label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      );
+    }
+
+    function Toast({ message, color }) {
+      if (!message) return null;
+      return (
+        <div className="toast" style={{ background: color }}>
+          {message}
+        </div>
+      );
+    }
+
+    function EventCard({ event, onAdd, inCart }) {
+      const color = getCategoryColor(event.category);
+      return (
+        <div className="event-card" style={{ borderLeftColor: color }}>
+          <div className="event-card-body">
+            <div>
+              <h3>{event.title}</h3>
+              <span className="badge" style={{ background: color }}>{event.category}</span>
+              <div className="event-meta">
+                <span>Duration: {event.duration}</span>
+                {event.location && <span>Location: {event.location}</span>}
+                {event.host && <span>Host: {event.host}</span>}
+              </div>
+            </div>
+            <button
+              className="btn-add"
+              onClick={() => onAdd(event.id)}
+              disabled={inCart}
+            >
+              {inCart ? "Added" : "+ Add"}
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    function CartItem({ item, index, onRemove }) {
+      return (
+        <div className="cart-item">
+          <div>
+            <p>{item.title}</p>
+            <span className="badge" style={{ background: getCategoryColor(item.category), fontSize: "0.7rem" }}>
+              {item.category}
+            </span>
+          </div>
+          <button className="btn-remove" onClick={() => onRemove(index)}>X</button>
+        </div>
+      );
+    }
+
+    const PARTICIPATION_TYPES = [
+      { value: "in-person", label: "In-Person", description: "Attend at the physical venue" },
+      { value: "virtual",   label: "Virtual",   description: "Join online via livestream" },
+      { value: "vip",       label: "VIP",        description: "Priority seating and exclusive access" },
+    ];
+
+    function ParticipationBox({ selected, error, onChange }) {
+      return (
+        <div className="participation-box">
+          <h2>Participation Type</h2>
+          <p className="info-subtitle">Select how you will be attending. Only one option can be chosen.</p>
+          <div className="participation-options">
+            {PARTICIPATION_TYPES.map(({ value, label, description }) => {
+              const isSelected = selected === value;
+              return (
+                <div
+                  key={value}
+                  className={"participation-option" + (isSelected ? " selected" : "") + (error && !selected ? " invalid-option" : "")}
+                  onClick={() => onChange(value)}
+                >
+                  <input
+                    className="participation-radio"
+                    type="radio"
+                    name="participationType"
+                    value={value}
+                    checked={isSelected}
+                    onChange={() => onChange(value)}
+                  />
+                  <div className="participation-label">
+                    <strong>{label}</strong>
+                    <span>{description}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          {error && <p className="participation-error">{error}</p>}
+        </div>
+      );
+    }
+
+    function PersonalInfoBox({ info, errors, onChange }) {
+      const fields = [
+        { key: "firstName", label: "First Name", type: "text", placeholder: "Jane" },
+        { key: "lastName",  label: "Last Name",  type: "text", placeholder: "Smith" },
+        { key: "email",     label: "Email",       type: "text", placeholder: "jane@example.com" },
+        { key: "phone",     label: "Phone Number", type: "text", placeholder: "555-123-4567" },
+      ];
+      return (
+        <div className="info-box">
+          <h2>Personal Information</h2>
+          <p className="info-subtitle">All fields are required to complete registration.</p>
+          <div className="info-grid">
+            {fields.map(({ key, label, type, placeholder }) => (
+              <div className="field-group" key={key}>
+                <label>{label}<span>*</span></label>
+                <input
+                  type={type}
+                  placeholder={placeholder}
+                  value={info[key]}
+                  onChange={(e) => onChange(key, e.target.value)}
+                  className={errors[key] ? "invalid" : ""}
+                />
+                <span className="field-error">{errors[key] || ""}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    const CONFERENCES = [
+      { id: "c1", title: "AI & the Future of Work", speaker: "Dr. Linda Park", time: "Sat 9:00 AM" },
+      { id: "c2", title: "Sustainable Campus Initiatives", speaker: "Prof. Marcus Green", time: "Sat 11:00 AM" },
+      { id: "c3", title: "Entrepreneurship 101", speaker: "Sarah Okonkwo, MBA", time: "Sat 1:00 PM" },
+      { id: "c4", title: "Mental Health in College", speaker: "Dr. James Liu", time: "Sat 3:00 PM" },
+      { id: "c5", title: "Breaking into Tech Internships", speaker: "Alumni Panel", time: "Sun 10:00 AM" },
+      { id: "c6", title: "Data Science for Everyone", speaker: "Prof. Aisha Ndiaye", time: "Sun 1:00 PM" },
+    ];
+
+    function SessionsBox({ selected, error, onToggle }) {
+      return (
+        <div className="sessions-box">
+          <h2>Select Sessions</h2>
+          <p className="info-subtitle">Choose one or more conference sessions to attend. At least one is required.</p>
+          <div className="sessions-grid">
+            {CONFERENCES.map((conf) => {
+              const isSelected = selected.includes(conf.id);
+              const showInvalid = error && selected.length === 0;
+              return (
+                <div
+                  key={conf.id}
+                  className={"session-card" + (isSelected ? " selected" : "") + (showInvalid ? " invalid-session" : "")}
+                  onClick={() => onToggle(conf.id)}
+                >
+                  <input
+                    className="session-checkbox"
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={() => onToggle(conf.id)}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  <div className="session-info">
+                    <strong>{conf.title}</strong>
+                    <span>{conf.speaker}</span>
+                    <span>{conf.time}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          {error && <p className="sessions-error">{error}</p>}
+        </div>
+      );
+    }
+
+    function ConferenceRegistration() {
+      const [events] = useState(() => readLocalStorage("events", SEED_EVENTS));
+      const [cart, setCart] = useState(() => readLocalStorage("cart", []));
+      const [query, setQuery] = useState("");
+      const [toast, setToast] = useState({ message: "", color: "#10b981" });
+      const toastTimer = useRef(null);
+      const [info, setInfo] = useState({ firstName: "", lastName: "", email: "", phone: "" });
+      const [participationType, setParticipationType] = useState("");
+      const [selectedSessions, setSelectedSessions] = useState([]);
+      const [errors, setErrors] = useState({});
+
+      useEffect(() => {
+        localStorage.setItem("cart", JSON.stringify(cart));
+      }, [cart]);
+
+      function showToast(message, color) {
+        clearTimeout(toastTimer.current);
+        setToast({ message, color: color || "#10b981" });
+        toastTimer.current = setTimeout(() => setToast({ message: "", color: "#10b981" }), 2500);
+      }
+
+      function addToCart(id) {
+        if (cart.some((item) => item.id === id)) {
+          showToast("Already in cart!", "#f59e0b");
+          return;
+        }
+        const event = events.find((e) => e.id === id);
+        if (!event) return;
+        setCart((prev) => [...prev, event]);
+        showToast(event.title + " added!", "#10b981");
+      }
+
+      function removeFromCart(index) {
+        setCart((prev) => prev.filter((_, i) => i !== index));
+      }
+
+      function toggleSession(id) {
+        setSelectedSessions((prev) =>
+          prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
+        );
+        setErrors((prev) => ({ ...prev, sessions: "" }));
+      }
+
+      function handleInfoChange(key, value) {
+        setInfo((prev) => ({ ...prev, [key]: value }));
+        if (errors[key]) {
+          setErrors((prev) => ({ ...prev, [key]: "" }));
+        }
+      }
+
+      function validateInfo() {
+        const newErrors = {};
+        if (!info.firstName.trim()) newErrors.firstName = "First name is required.";
+        if (!info.lastName.trim())  newErrors.lastName  = "Last name is required.";
+        if (!info.email.trim()) {
+          newErrors.email = "Email is required.";
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(info.email)) {
+          newErrors.email = "Enter a valid email address.";
+        }
+        if (!info.phone.trim()) {
+          newErrors.phone = "Phone number is required.";
+        } else if (!/^[\d\s\-\(\)\+]{7,15}$/.test(info.phone)) {
+          newErrors.phone = "Enter a valid phone number.";
+        }
+        if (!participationType) newErrors.participationType = "Please select a participation type.";
+        if (selectedSessions.length === 0) newErrors.sessions = "Please select at least one session.";
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+      }
+
+      function checkout() {
+        if (!validateInfo()) {
+          showToast("Please fill in all required fields.", "#ef4444");
+          return;
+        }
+        showToast("Registration submitted!", "#3b82f6");
+        setCart([]);
+        setInfo({ firstName: "", lastName: "", email: "", phone: "" });
+        setParticipationType("");
+        setSelectedSessions([]);
+        setErrors({});
+        $.ajax({
+  url: "https://jsonplaceholder.typicode.com/posts",
+  method: "POST",
+  contentType: "application/json",
+  data: JSON.stringify(doc),
+  success: function(response) {
+    console.log("Success:", response);
+  }
+});
+      }
+
+      const cartIds = new Set(cart.map((item) => item.id));
+
+      const filteredEvents = events.filter((e) => {
+        const q = query.toLowerCase();
+        return (
+          e.title.toLowerCase().includes(q) ||
+          e.category.toLowerCase().includes(q) ||
+          (e.location || "").toLowerCase().includes(q) ||
+          (e.host || "").toLowerCase().includes(q)
+        );
+      });
+
+      return (
+        <div>
+          <NavBar />
+          <Toast message={toast.message} color={toast.color} />
+
+          <header>
+            <h1>Conference Registration</h1>
+            <p>Fill in your details, select your sessions, and register below.</p>
+          </header>
+
+          <div className="page-content">
+            <PersonalInfoBox info={info} errors={errors} onChange={handleInfoChange} />
+
+            <ParticipationBox selected={participationType} error={errors.participationType} onChange={(val) => { setParticipationType(val); setErrors((prev) => ({ ...prev, participationType: "" })); }} />
+
+            <SessionsBox selected={selectedSessions} error={errors.sessions} onToggle={toggleSession} />
+          </div>
+
+          <main>
+            <section className="events-col">
+              <h2>Browse Events</h2>
+              <input
+                type="text"
+                placeholder="Search by name, category, location..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+              {filteredEvents.length === 0 ? (
+                <p className="empty">No events match your search.</p>
+              ) : (
+                filteredEvents.map((evt) => (
+                  <EventCard
+                    key={evt.id}
+                    event={evt}
+                    onAdd={addToCart}
+                    inCart={cartIds.has(evt.id)}
+                  />
+                ))
+              )}
+            </section>
+
+            <aside className="cart-col">
+              <div className="cart-card">
+                <div className="cart-header">
+                  <h2>Your Cart</h2>
+                  <span className="cart-count">{cart.length}</span>
+                </div>
+                <div className="cart-body">
+                  {cart.length === 0 ? (
+                    <p className="empty">Your cart is empty.</p>
+                  ) : (
+                    cart.map((item, i) => (
+                      <CartItem key={item.id} item={item} index={i} onRemove={removeFromCart} />
+                    ))
+                  )}
+                </div>
+                <button className="btn-checkout" onClick={checkout}>Register</button>
+              </div>
+            </aside>
+          </main>
+
+          <footer>
+            2026 Student Club Portal. IST256 Group Project.
+          </footer>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<ConferenceRegistration />);
+  </script>
+</body>
+</html>

@@ -3,17 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Session Registration – TechConf 2025</title>
+  <title>Session Registration – TechConf 2026</title>
 
-  <!-- Bootstrap -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"/>
 
-  <!-- React + Babel (for JSX in browser) -->
   <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-  <!-- jQuery (for AJAX demo) -->
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
   <link rel="stylesheet" href="Confstyle.css">
@@ -21,7 +18,7 @@
 <body>
 
   <header>
-    <h1>🎤 TechConf 2025</h1>
+    <h1>🎤 TechConf 2026</h1>
     <p>Annual Technology Conference &amp; Expo</p>
   </header>
 
@@ -44,15 +41,11 @@
   </main>
 
   <footer>
-    <p>&copy; 2025 TechConf. All rights reserved.</p>
+    <p>&copy; 2026 TechConf. All rights reserved.</p>
   </footer>
 
-  <!-- ═══════════════════════════════════════════
-       REACT APPLICATION
-  ═══════════════════════════════════════════ -->
   <script type="text/babel">
 
-    // ── Data: available sessions (simulates data fetched via jQuery/AJAX) ──
     const AVAILABLE_SESSIONS = [
       { id:"s1", title:"Keynote: AI Frontiers",    time:"9:00 AM", track:"AI/ML",     room:"Hall A" },
       { id:"s2", title:"Web Dev in 2025",           time:"10:30 AM",track:"Web",       room:"Room 101" },
@@ -64,7 +57,6 @@
       { id:"s8", title:"Closing Panel & Networking",time:"4:00 PM", track:"General",   room:"Hall A" },
     ];
 
-    // ── Utilities ──
     const emptyForm = () => ({
       firstName: "", lastName: "", email: "", phone: "",
       company: "", participationType: "in-person",
@@ -72,7 +64,6 @@
       sessions: [], shirtSize: "", agreeTerms: false,
     });
 
-    // ── Main React App ──
     function App() {
       const [form,      setForm]      = React.useState(emptyForm());
       const [errors,    setErrors]    = React.useState({});
@@ -81,31 +72,27 @@
       const [ajaxMsg,   setAjaxMsg]   = React.useState({ text:"", cls:"" });
       const [sessionData, setSessionData] = React.useState(AVAILABLE_SESSIONS);
 
-      // Simulate jQuery AJAX fetching sessions on mount
       React.useEffect(() => {
-        // jQuery AJAX call to simulate fetching session data from a RESTful API
-        // In production this would hit a real endpoint e.g. /api/sessions
+
         $.ajax({
-          url: "https://jsonplaceholder.typicode.com/posts/1", // demo endpoint
+          url: "https://jsonplaceholder.typicode.com/posts/1",
           method: "GET",
           success: function() {
-            // Sessions already loaded from local constant (demo uses static data)
+
             setSessionData(AVAILABLE_SESSIONS);
           },
           error: function() {
-            setSessionData(AVAILABLE_SESSIONS); // fallback
+            setSessionData(AVAILABLE_SESSIONS);
           }
         });
       }, []);
 
-      // ── Field change handler ──
       const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
         setForm(prev => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
         if (errors[name]) setErrors(prev => ({ ...prev, [name]: "" }));
       };
 
-      // ── Session toggle ──
       const toggleSession = (id) => {
         setForm(prev => {
           const already = prev.sessions.includes(id);
@@ -116,7 +103,6 @@
         if (errors.sessions) setErrors(prev => ({ ...prev, sessions: "" }));
       };
 
-      // ── JS Client-side Validation ──
       const validate = () => {
         const e = {};
         if (!form.firstName.trim())      e.firstName = "First name is required.";
@@ -133,7 +119,6 @@
         return e;
       };
 
-      // ── Build JSON document ──
       const buildJson = () => {
         const selectedSessions = form.sessions.map(id =>
           sessionData.find(s => s.id === id)
@@ -158,12 +143,11 @@
         };
       };
 
-      // ── Submit: validate → JSON → AJAX ──
       const handleSubmit = () => {
         const errs = validate();
         if (Object.keys(errs).length > 0) {
           setErrors(errs);
-          // Scroll to first error
+
           const firstErrEl = document.querySelector(".field-error");
           if (firstErrEl) firstErrEl.scrollIntoView({ behavior:"smooth", block:"center" });
           return;
@@ -173,9 +157,8 @@
         setJsonDoc(doc);
         setAjaxMsg({ text: "⏳ Sending registration...", cls: "sending" });
 
-        // ── AJAX via jQuery: POST JSON to RESTful API ──
         $.ajax({
-          url: "https://jsonplaceholder.typicode.com/posts", // demo REST endpoint
+          url: "https://jsonplaceholder.typicode.com/posts",
           method: "POST",
           contentType: "application/json",
           data: JSON.stringify(doc),
@@ -189,7 +172,6 @@
         });
       };
 
-      // ── Reset ──
       const handleReset = () => {
         setForm(emptyForm());
         setErrors({});
@@ -198,7 +180,6 @@
         setAjaxMsg({ text:"", cls:"" });
       };
 
-      // ── Render success state ──
       if (submitted) {
         return (
           <div>
@@ -216,7 +197,6 @@
         );
       }
 
-      // ── Render form ──
       return (
         <div>
           <div className="page-title">
@@ -224,7 +204,6 @@
             <p>Complete the form below to register for TechConf 2025 sessions.</p>
           </div>
 
-          {/* ── Card 1: Personal Info ── */}
           <div className="form-card">
             <h5>👤 Personal Information</h5>
             <div className="row g-3">
@@ -260,7 +239,6 @@
             </div>
           </div>
 
-          {/* ── Card 2: Participation Type ── */}
           <div className="form-card">
             <h5>🎟️ Participation Type <span className="required-star">*</span></h5>
             <div className="row g-3 justify-content-center">
@@ -290,7 +268,6 @@
             {errors.participationType && <div className="field-error mt-2">{errors.participationType}</div>}
           </div>
 
-          {/* ── Card 3: Sessions ── */}
           <div className="form-card">
             <h5>📅 Select Sessions <span className="required-star">*</span></h5>
             <p style={{fontSize:"0.87rem",color:"#666",marginBottom:16}}>
@@ -310,7 +287,6 @@
             {errors.sessions && <div className="field-error mt-2">{errors.sessions}</div>}
           </div>
 
-          {/* ── Card 4: Additional Options ── */}
           <div className="form-card">
             <h5>🛠️ Additional Options</h5>
             <div className="row g-3">
@@ -339,7 +315,6 @@
             </div>
           </div>
 
-          {/* ── Card 5: Terms & Submit ── */}
           <div className="form-card">
             <h5>✅ Confirm &amp; Submit</h5>
             <div className="form-check mb-3" style={{textAlign:"left"}}>
@@ -374,7 +349,6 @@
       );
     }
 
-    // ── Mount React app ──
     const root = ReactDOM.createRoot(document.getElementById("react-root"));
     root.render(<App />);
   </script>

@@ -12,7 +12,7 @@ main {
     margin: 20px;
     text-align: center;   
 }
-pnav {
+.topnav {
     background: white;
     border-bottom: 2px solid #e2e8f0;
     padding: 12px 0;
